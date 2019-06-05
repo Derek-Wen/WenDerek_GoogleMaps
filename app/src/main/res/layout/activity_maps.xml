@@ -16,7 +16,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:onClick="ChangeView"
-            android:text="Change Mode" />
+            android:text="View" />
     </LinearLayout>
     <!-- This is for the map -->
     <fragment

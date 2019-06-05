@@ -2,10 +2,14 @@ package com.example.mymapsapp;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Build;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -19,6 +23,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private static final int MY_REQUEST_INT = 177;
     private GoogleMap mMap;
+    private LocationManager locationManager;
+
+    private boolean isGPSEnabled = false;
+    private boolean isNetworkEnabled = false;
+
+    private static final long MIN_TIME_BW_UPDATES = 1000 * 5;
+    private static final float MIN_DISTANCE_CHANGE_FOR_UPDATE = 0.0f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,30 +55,109 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
 
-        // Add a marker in Sydney and move the camera
         LatLng SanDiego = new LatLng(32.70, 242.82);
         mMap.addMarker(new MarkerOptions().position(SanDiego).title("San Diego"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(SanDiego));
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, MY_REQUEST_INT);
             }
             return;
-        }
-        else {
+        } else {
             mMap.setMyLocationEnabled(true);
         }
     }
-    public void ChangeView(View view){
-        if(mMap.getMapType() == 1){
+
+    public void ChangeView(View view) {
+        if (mMap.getMapType() == 1) {
             mMap.setMapType(2);
-        }
-        else{
+        } else {
             mMap.setMapType(1);
         }
 
+    }
+
+    public void getLocation() {
+        try {
+            locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+
+
+            //get GPS status
+            isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+            if (isGPSEnabled) Log.d("MyMap", "getLocation; GPS is enabled");
+
+            //get Network status
+            //I do this here
+
+
+            if (!isGPSEnabled && !isNetworkEnabled)
+                Log.d("MyMap", "getLocation: No provider is enabled");
+            else {
+                if (isNetworkEnabled) {
+                    //put Log.d here
+                    locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+                            MIN_TIME_BW_UPDATES,
+                            MIN_DISTANCE_CHANGE_FOR_UPDATE,
+                            locationListenerNetwork);
+                }
+                if (isGPSEnabled) {
+                    //TODO add Log.d
+                    locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                            MIN_TIME_BW_UPDATES,
+                            MIN_DISTANCE_CHANGE_FOR_UPDATE,
+                            locationListenerGps);
+                }
+            }
+
+        } catch (Exception e) {
+            Log.d("MyMaps", "Caught exception in getLocation");
+            e.printStackTrace();
+        }
+    }
+
+    LocationListener locationListenerNetwork = new LocationListener() {
+        @Override
+        public void onLocationChanged(Location location) {
+
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+
+        }
+    }
+    LocationListener locationListenerGps = new LocationListener() {
+        @Override
+        public void onLocationChanged(Location location) {
+            
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+
+        }
     }
 }
 //setMyLocationEnabled
