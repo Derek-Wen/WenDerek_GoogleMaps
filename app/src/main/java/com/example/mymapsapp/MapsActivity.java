@@ -141,7 +141,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     LocationListener locationListenerGps = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
-            
+
         }
 
         @Override
