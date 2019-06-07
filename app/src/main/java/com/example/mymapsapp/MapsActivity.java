@@ -36,6 +36,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private double longitude;
     private double latitude;
     private static final float MY_LOCATION_ZOOM_FACTOR = 17f;
+    private boolean isLocating = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,26 +63,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
 
         // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(37.7749, -122.4194);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        LatLng SanDiego = new LatLng(32.7157, -117.1611);
+        mMap.addMarker(new MarkerOptions().position(SanDiego).title("San Diego"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(SanDiego));
 
         setLocationEnabled();
     }
-
     public void getLocation() {
         try {
             locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
             //get GPS status
             isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-            if (isGPSEnabled) Log.d("MyMapsApp", "getLocation; GPS is enabled");
-            //TODO get network status (cell tower + wifi) Look for network provider in LocationManager
-            //TODO add code here to update isNetworkEnabled and output Log.d
+            if (isGPSEnabled) Log.d("MyMaps", "getLocation; GPS is enabled");
+            // get network status (cell tower + wifi) Look for network provider in LocationManager
+            isNetworkEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+            if(isNetworkEnabled) Log.d("MyMaps", "getLocation: Network Enabled");
+            // add code here to update isNetworkEnabled and output Log.d
             if (!isGPSEnabled && !isNetworkEnabled)
-                Log.d("MyMapsApp", "getLocation: No provider enabled");
+                Log.d("MyMaps", "getLocation: No provider enabled");
             else {
                 if (isNetworkEnabled) {
-                    //TODO add Log.d
+                    // add Log.d
+                    Log.d("MyMaps", "Network enabled passed");
                     if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                         // TODO: Consider calling
                         //    ActivityCompat#requestPermissions
@@ -98,7 +101,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             locationListenerNetwork);
                 }
                 if (isGPSEnabled) {
-                    //TODO add Log.d
+                    // add Log.d
+                    Log.d("MyMaps", "GPS enabled passed");
                     if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                         // TODO: Consider calling
                         //    ActivityCompat#requestPermissions
@@ -253,8 +257,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         .strokeColor(Color.RED)
                         .strokeWidth(2)
                         .fillColor(Color.RED));
-                //TODO add outer ring 1
-                //TODO add outer ring 2
+                Circle circle2 = mMap.addCircle((new CircleOptions().
+                        center(userLocation)
+                        .radius(2)
+                        .strokeColor(Color.RED)
+                        .strokeWidth(2)));
+                Circle circle3 = mMap.addCircle((new CircleOptions().center(userLocation)
+                        .radius(3)
+                        .strokeColor(Color.RED)
+                        .strokeWidth(2)));
+                // add outer ring 1
+                //add outer ring 2
             }
             else{
                 Circle circle = mMap.addCircle(new CircleOptions()
@@ -263,6 +276,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         .strokeColor(Color.BLUE)
                         .strokeWidth(2)
                         .fillColor(Color.BLUE));
+                Circle circle2 = mMap.addCircle(new CircleOptions()
+                        .center(userLocation)
+                        .radius(2)
+                        .strokeColor(Color.BLUE)
+                        .strokeWidth(2));
+                Circle circle3 = mMap.addCircle(new CircleOptions()
+                        .center(userLocation)
+                        .radius(3)
+                        .strokeColor(Color.BLUE)
+                        .strokeWidth(2));
             }
 
             mMap.animateCamera(update);
@@ -276,8 +299,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     //TODO Write method trackMYLocation(View v) ---
     // call getLocation if currently not tracking
     // or turn off tracking if currently enabled (removeUpdates for both listeners)
-    // Write method clearMarkers(view v) ---
+    public void trackMyLocation(View view){
+        if(!isLocating){
+            getLocation();
+            isLocating = true;
+        }else{
+            locationManager.removeUpdates(locationListenerGPS);
+            locationManager.removeUpdates(locationListenerNetwork);
+            isLocating = false;
+        }
+    }
+
+
+    //TODO Write method clearMarkers(view v) ---
     // clear all markers from map
+    public void clearMarkers(View view){
+        mMap.clear();
+    }
     public void setLocationEnabled(){
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
@@ -301,17 +339,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if(grantResults.length >0){
             for(int i:grantResults){
                 if(i != PackageManager.PERMISSION_GRANTED){
-                    Log.d("MyMapsApp","Location permission denied");
+                    Log.d("MyMaps","Location permission denied");
                     break;
                 }
             }
         }
         else{
-            Log.d("MyMapsApp", "Location permission denied");
+            Log.d("MyMaps", "Location permission denied");
         }
         setLocationEnabled();
     }
     public void changeView(View view){
-
+        if(mMap.getMapType() == GoogleMap.MAP_TYPE_NORMAL){
+            mMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+        }
+        else if(mMap.getMapType() == GoogleMap.MAP_TYPE_SATELLITE){
+            mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+        }
     }
 }
